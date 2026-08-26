@@ -1,20 +1,23 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
     "declaration": true,
+    "declarationMap": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ESNext",
-    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2023",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "baseUrl": "./",
     "sourceMap": false,
     "inlineSourceMap": true,
     "incremental": true,
     "lib": [
-      "esnext",
-      "dom"
-    ],
+      "ES2023",
+      "DOM"
+    ]
   }
 }

@@ -1,9 +1,9 @@
 import { Page } from 'playwright-core';
 import axios from 'axios';
 
-const rnd = (max, min) => Math.floor(Math.random() * (max - min)) + min;
+const rnd = (max: number, min: number): number => Math.floor(Math.random() * (max - min)) + min;
 
-export async function solveCaptcha(page: Page) {
+export async function solveCaptcha(page: Page): Promise<string | null> {
     const anchorIframe = page.frameLocator('iframe[src*="api2/anchor"]');
     const reCaptchaIframe = page.frameLocator('iframe[src*="api2/bframe"]');
 
@@ -13,16 +13,21 @@ export async function solveCaptcha(page: Page) {
     const audioLink = reCaptchaIframe.locator('#audio-source');
 
     while (true) {
-        const audioCaptcha = await page.waitForResponse(await audioLink.getAttribute('src'));
+        const src = await audioLink.getAttribute('src');
+        if (!src) throw new Error('Audio source not found in reCAPTCHA iframe');
+
+        const audioCaptcha = await page.waitForResponse(src);
         try {
-            const { data } = await axios.post('https://api.wit.ai/speech?v=2021092', await audioCaptcha.body(), {
+            const { data } = await axios.post<any>('https://api.wit.ai/speech?v=2021092', await audioCaptcha.body(), {
                 headers: {
                     Authorization: 'Bearer JVHWCNWJLWLGN6MFALYLHAPKUFHMNTAC',
                     'Content-Type': 'audio/mpeg3',
                 },
             });
 
-            const audioTranscript = data.match('"text": "(.*)",')[1].trim();
+            const match = /"text":\s*"(.+?)"/.exec(JSON.stringify(data));
+            if (!match) throw new Error('No transcript found in response');
+            const audioTranscript = match[1].trim();
 
             await reCaptchaIframe.locator('#audio-response').type(audioTranscript, { delay: rnd(75, 30) });
 
@@ -30,8 +35,11 @@ export async function solveCaptcha(page: Page) {
 
             await anchorIframe.locator('#recaptcha-anchor[aria-checked="true"]').waitFor();
 
-            return page.evaluate(() => document.getElementById('g-recaptcha-response')['value']);
-        } catch (e) {
+            return await page.evaluate(() => {
+                const el = document.getElementById('g-recaptcha-response') as HTMLInputElement | null;
+                return el ? el.value : null;
+            });
+        } catch (e: any) {
             console.error(e);
             await reCaptchaIframe.locator('#recaptcha-reload-button').click({ delay: rnd(150, 30) });
         }

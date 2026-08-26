@@ -29,7 +29,7 @@ export async function solveCaptcha(page: Page): Promise<string | null> {
             if (!match) throw new Error('No transcript found in response');
             const audioTranscript = match[1].trim();
 
-            await reCaptchaIframe.locator('#audio-response').type(audioTranscript, { delay: rnd(75, 30) });
+            await reCaptchaIframe.locator('#audio-response').fill(audioTranscript);
 
             await reCaptchaIframe.locator('#recaptcha-verify-button').click({ delay: rnd(150, 30) });
 

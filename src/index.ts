@@ -13,10 +13,10 @@ const getFrameLocator = (page: Page, parentSelector: string | undefined, srcPatt
 
 export async function resolve(page: Page, parentSelector?: string): Promise<string | null> {
     const anchorIframe = getFrameLocator(page, parentSelector, 'api2/anchor');
-    const contentIframe = getFrameLocator(page, parentSelector, 'api2/bframe');
+    const contentIframe = getFrameLocator(page, undefined, 'api2/bframe');
 
     await anchorIframe.locator('#recaptcha-anchor').click({ delay: rnd(150, 30) });
-    await contentIframe.locator('#recaptcha-audio-button').click({ delay: rnd(150, 30) });
+    await contentIframe.locator('#recaptcha-audio-button').click({ delay: rnd(300, 90) });
 
     const audioLink = contentIframe.locator('#audio-source');
 

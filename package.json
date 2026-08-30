@@ -1,14 +1,14 @@
 {
   "name": "playwright-recaptcha-solver",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "type": "module",
   "license": "MIT",
   "repository": "github:xrip/playwright-recaptcha-solver",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
     }
   },
   "engines": {

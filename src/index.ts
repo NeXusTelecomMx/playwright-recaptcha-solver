@@ -3,9 +3,32 @@ import axios from 'axios';
 
 const rnd = (max: number, min: number): number => Math.floor(Math.random() * (max - min)) + min;
 
-export async function resolve(page: Page): Promise<string | null> {
-    const anchorIframe = page.frameLocator('iframe[src*="api2/anchor"]');
-    const contentIframe = page.frameLocator('iframe[src*="api2/bframe"]');
+export type FrameLocatorTarget = {
+    id?: string;
+    className?: string;
+    tag?: string;
+};
+
+const escapeSelector = (value: string): string => value.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
+
+const buildFrameSelector = (target?: FrameLocatorTarget, srcPattern?: string): string => {
+    const tag = target?.tag ?? 'iframe';
+    const id = target?.id ? `#${escapeSelector(target.id)}` : '';
+    const className = target?.className
+        ? `.${target.className
+              .split(/\s+/)
+              .filter(Boolean)
+              .map((classItem) => escapeSelector(classItem))
+              .join('.')}`
+        : '';
+
+    const selector = `${tag}${id}${className}`;
+    return srcPattern ? `${selector}[src*="${srcPattern}"]` : selector;
+};
+
+export async function resolve(page: Page, frameTarget?: FrameLocatorTarget): Promise<string | null> {
+    const anchorIframe = page.frameLocator(buildFrameSelector(frameTarget, 'api2/anchor'));
+    const contentIframe = page.frameLocator(buildFrameSelector(frameTarget, 'api2/bframe'));
 
     await anchorIframe.locator('#recaptcha-anchor').click({ delay: rnd(150, 30) });
     await contentIframe.locator('#recaptcha-audio-button').click({ delay: rnd(150, 30) });

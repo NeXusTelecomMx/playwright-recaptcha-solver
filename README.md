@@ -1,50 +1,64 @@
 # Google ReCaptcha V2 Solver for [Playwright](https://playwright.dev/)
 
-![demo](demo1.gif)
-
-### If you like this project feel free to donate!
-
-[![Donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/paypalme/xrip/)
-
 ## Installation
 
-```sh
-yarn add https://github.com/xrip/puppeteer-recaptcha-solver.git
+```bash
+npm install
 ```
 
-## Example
-```js
-    import { chromium } from 'playwright';
-    import { solveCaptcha } from 'playwright-recaptcha-solver';
+If you are using this as a package from GitHub:
 
-    (async () => {
-
-        const browser = await chromium.launch({
-            headless: false,
-            args: [
-                '--disable-site-isolation-trials',
-                '--disable-features=site-per-process,SitePerProcess',
-                '--disable-blink-features=AutomationControlled',
-            ],
-
-        });
-
-        const ctx = await browser.newContext();
-        const page = await ctx.newPage();
-
-        await page.goto('https://www.google.com/recaptcha/api2/demo');
-
-        await solveCaptcha(page);
-
-        console.log('done');
-    })();
+```bash
+npm install github:xrip/playwright-recaptcha-solver
 ```
-## Known issues
 
-![](https://user-images.githubusercontent.com/3437378/82528851-b14e5a80-9b07-11ea-9f30-6f4fbef0ff1f.png)
+## Usage
 
-Sometimes you are blocked because of the reputation of the your IP. 
-To avoid this, you can try to buy some residential proxies or run a simple version of the demo without a proxy.
+```ts
+import { chromium } from 'playwright';
+import { resolve } from 'playwright-recaptcha-solver';
+
+(async () => {
+  const browser = await chromium.launch({
+    headless: false,
+    args: [
+      '--disable-site-isolation-trials',
+      '--disable-features=site-per-process,SitePerProcess',
+      '--disable-blink-features=AutomationControlled',
+    ],
+  });
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  await page.goto('https://www.google.com/recaptcha/api2/demo');
+
+  const token = await resolve(page);
+
+  console.log('reCAPTCHA token:', token);
+  await browser.close();
+})();
+```
+
+## Custom iframe target
+
+The `resolve` function accepts an optional selector to locate the iframe containing the challenge. You can target the iframe by `id`, `className`, or `tag`.
+
+```ts
+await resolve(page, { id: 'recaptcha-iframe' });
+await resolve(page, { className: 'g-recaptcha' });
+await resolve(page, { tag: 'iframe' });
+await resolve(page, { tag: 'iframe', className: 'recaptcha challenge' });
+```
+
+This is useful when the page has multiple reCAPTCHA iframes or custom markup and you need to choose the exact frame container.
+
+## Notes
+
+- The function returns the hidden reCAPTCHA response token if it succeeds.
+- The solver relies on the Google reCAPTCHA challenge flow and may require a valid environment or network access.
+- Some pages may still trigger bot protection depending on IP reputation, browser fingerprint, or site-specific policies.
 
 ## Credits
-- Based on puppeteer-recaptcha-solver by [danielgatis](https://github.com/danielgatis/puppeteer-recaptcha-solver) 
+
+- Based on the original work by [danielgatis](https://github.com/danielgatis/puppeteer-recaptcha-solver)

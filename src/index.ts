@@ -11,7 +11,26 @@ const getFrameLocator = (page: Page, parentSelector: string | undefined, srcPatt
     return page.frameLocator(`iframe[src*="${srcPattern}"]`);
 };
 
-const clickVisible = async (locator: ReturnType<typeof getFrameLocator>, selector: string, delay = 120) => {
+const getVisibleBframe = async (page: Page) => {
+    const frames = page.locator('iframe[src*="api2/bframe"]');
+    const count = await frames.count();
+
+    for (let i = 0; i < count; i += 1) {
+        const frame = frames.nth(i);
+        const visible = await frame.evaluate((element) => {
+            const style = window.getComputedStyle(element);
+            return style.opacity !== '0' && style.visibility !== 'hidden' && style.display !== 'none';
+        });
+
+        if (visible) {
+            return frame.contentFrame();
+        }
+    }
+
+    return page.frameLocator('iframe[src*="api2/bframe"]').first();
+};
+
+const clickVisible = async (locator: any, selector: string, delay = 120) => {
     const target = locator.locator(selector);
     await target.waitFor({ state: 'visible', timeout: 30000 });
     await target.click({ delay });
@@ -19,7 +38,7 @@ const clickVisible = async (locator: ReturnType<typeof getFrameLocator>, selecto
 
 export async function resolve(page: Page, parentSelector?: string): Promise<string | null> {
     const anchorIframe = getFrameLocator(page, parentSelector, 'api2/anchor');
-    const contentIframe = getFrameLocator(page, undefined, 'api2/bframe');
+    const contentIframe = await getVisibleBframe(page);
 
     await anchorIframe.locator('#recaptcha-anchor').click({ delay: rnd(150, 30) });
     await clickVisible(contentIframe, '#recaptcha-audio-button', rnd(180, 60));

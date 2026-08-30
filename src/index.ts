@@ -11,12 +11,18 @@ const getFrameLocator = (page: Page, parentSelector: string | undefined, srcPatt
     return page.frameLocator(`iframe[src*="${srcPattern}"]`);
 };
 
+const clickVisible = async (locator: ReturnType<typeof getFrameLocator>, selector: string, delay = 120) => {
+    const target = locator.locator(selector);
+    await target.waitFor({ state: 'visible', timeout: 30000 });
+    await target.click({ delay });
+};
+
 export async function resolve(page: Page, parentSelector?: string): Promise<string | null> {
     const anchorIframe = getFrameLocator(page, parentSelector, 'api2/anchor');
     const contentIframe = getFrameLocator(page, undefined, 'api2/bframe');
 
     await anchorIframe.locator('#recaptcha-anchor').click({ delay: rnd(150, 30) });
-    await contentIframe.locator('#recaptcha-audio-button').click({ delay: rnd(300, 90) });
+    await clickVisible(contentIframe, '#recaptcha-audio-button', rnd(180, 60));
 
     const audioLink = contentIframe.locator('#audio-source');
 

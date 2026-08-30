@@ -3,14 +3,14 @@ import axios from 'axios';
 
 const rnd = (max: number, min: number): number => Math.floor(Math.random() * (max - min)) + min;
 
-export async function solveCaptcha(page: Page): Promise<string | null> {
+export async function resolve(page: Page): Promise<string | null> {
     const anchorIframe = page.frameLocator('iframe[src*="api2/anchor"]');
-    const reCaptchaIframe = page.frameLocator('iframe[src*="api2/bframe"]');
+    const contentIframe = page.frameLocator('iframe[src*="api2/bframe"]');
 
     await anchorIframe.locator('#recaptcha-anchor').click({ delay: rnd(150, 30) });
-    await reCaptchaIframe.locator('#recaptcha-audio-button').click({ delay: rnd(150, 30) });
+    await contentIframe.locator('#recaptcha-audio-button').click({ delay: rnd(150, 30) });
 
-    const audioLink = reCaptchaIframe.locator('#audio-source');
+    const audioLink = contentIframe.locator('#audio-source');
 
     while (true) {
         const src = await audioLink.getAttribute('src');
@@ -29,11 +29,11 @@ export async function solveCaptcha(page: Page): Promise<string | null> {
             if (!match) throw new Error('No transcript found in response');
             const audioTranscript = match[1].trim();
 
-            const responseLocator = reCaptchaIframe.locator('#audio-response');
+            const responseLocator = contentIframe.locator('#audio-response');
             await responseLocator.focus();
             await page.keyboard.type(audioTranscript, { delay: rnd(75, 30) });
 
-            await reCaptchaIframe.locator('#recaptcha-verify-button').click({ delay: rnd(150, 30) });
+            await contentIframe.locator('#recaptcha-verify-button').click({ delay: rnd(150, 30) });
 
             await anchorIframe.locator('#recaptcha-anchor[aria-checked="true"]').waitFor();
 
@@ -43,7 +43,7 @@ export async function solveCaptcha(page: Page): Promise<string | null> {
             });
         } catch (e: any) {
             console.error(e);
-            await reCaptchaIframe.locator('#recaptcha-reload-button').click({ delay: rnd(150, 30) });
+            await contentIframe.locator('#recaptcha-reload-button').click({ delay: rnd(150, 30) });
         }
     }
 }

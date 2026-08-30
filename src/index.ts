@@ -1,4 +1,4 @@
-import { Page } from 'playwright-core';
+import type { Page } from 'playwright-core';
 import axios from 'axios';
 
 const rnd = (max: number, min: number): number => Math.floor(Math.random() * (max - min)) + min;
